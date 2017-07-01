@@ -1,16 +1,48 @@
+//*************************************************************************************
+//脚本主要类和函数**********************************************************************
+//*************************************************************************************
 public class ButtonMask //手柄各按键名称
 
 public class Device //封装了跟踪设备的全部信息
-    public bool GetPress() //按下按键一直触发
-		public bool GetPressDown() //按下按键只触发一次
-		public bool GetPressUp() //按下按键只触发一次
+    GetPress() //按下按键一直触发
+    GetPressDown() //按下按键只触发一次
+    GetPressUp() //按下按键只触发一次
     
-    public bool GetTouch() //针对TouchPad
-		public bool GetTouchDown()
-		public bool GetTouchUp()
+    GetTouch() //针对TouchPad
+    GetTouchDown()
+    GetTouchUp()
     
+    GetAxis() //获取Touchpad圆盘坐标或Trigger的行程值（0-1），函数默认参数是手柄上的Touchpad。共有5个AxisId参数可选，0是TouchPad，1是Trigger，2,3,4应该是没有用的，且此函数只接受EVRButtonId类参数而不接受ButtonMask。
     
+    TriggerHapticPulse() //手柄震动控制函数，参数名称解释的是时间，默认500,但实际上控制的是震动的强度。默认AxisId是EVRButtonId_touchpad，选择其他EVRButtonId没用（等价参数axis0可以）,其会调用OpenVR中的同名函数。参数超过4000会无效，导致震动不触发。可以通过协程的while（true）+waitforsecond控制震动间隔，通过stop协程控制震动结束。
+    
+    GetHairTrigger()
+    GetHairTriggerDown() //定义为有false转至true的过程，判断先前状态和当前状态。
+    GetHairTriggerUp() //定义为有true转至false的过程，判断先前状态和当前状态。
+    //HairTrigger是检测当你握住扳手超过一个固定值（0.1，可调）时即触发的状态，相当于利用Trigger的变化量来做一个功能的触发。
+    
 
 public static Device Input() //被SteamVR_Render脚本调用，更新各跟踪设备的信息
 
 public static void Update() //根据Index初始化Device[]数组，并实例化所有16个Device
+
+
+//*************************************************************************************
+//脚本执行顺序**************************************************************************
+//*************************************************************************************
+Update()
+Input() //初始化16个设备的信息存储空间，并返回某个设备；
+Device.Update() 
+    1. GetControllerStateWithPose() 调用OpenVR中的函数获取手柄状态和姿态。结果存在这两个变量State（VRControllerState_t）和Pose（TrackedDevicePose_t）中，由GetState()和GetPose()获取并由此返回一系列的可查询参数及各种Get函数。
+       各可查询参数说明如下（相当于对TrackedDevicePose_t中的参数翻译了下）
+       valid：GetControllerStateWithPose（）函数调用是否成功；
+       connected：判断设备是否连接；
+       hasTracking：判断设备是否跟踪正常；
+       根据ETrackingResult的结果得到下面三个参数：
+       outOfRange：判断设备是否超出范围；
+       calibrating：判断设备是否正在校正；
+       uninitialized：判断设备是否未初始化；
+       transform：获取的结果是包含12个元素的一维数组，通过SteamVR_Utils.RigidTransform函数将12个元素重组为3X4矩阵并针对Unity的坐标系进行修正，同时添加了对position和rotation方便的引用。
+       velocity和angularVelocity：这两个速度也针对Unity的坐标系进行修正，lighthouse跟踪的空间轴方向与Unity存在偏差。
+       
+    2. UpdateHairTrigger() 检测自定义的一种操作：轻按Trigger。 
