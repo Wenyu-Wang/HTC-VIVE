@@ -1,0 +1,16 @@
+public class ButtonMask //手柄各按键名称
+
+public class Device //封装了跟踪设备的全部信息
+    public bool GetPress() //按下按键一直触发
+		public bool GetPressDown() //按下按键只触发一次
+		public bool GetPressUp() //按下按键只触发一次
+    
+    public bool GetTouch() //针对TouchPad
+		public bool GetTouchDown()
+		public bool GetTouchUp()
+    
+    
+
+public static Device Input() //被SteamVR_Render脚本调用，更新各跟踪设备的信息
+
+public static void Update() //根据Index初始化Device[]数组，并实例化所有16个Device
